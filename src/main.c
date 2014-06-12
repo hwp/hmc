@@ -23,6 +23,7 @@ int main(int argc, char** argv) {
 
   if (curl) {
     curl_easy_setopt(curl, CURLOPT_URL, argv[1]);
+    curl_easy_setopt(curl, CURLOPT_USERAGENT, "hwp"); 
 
     d_string* content = dstr_alloc();
     curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_data);
@@ -30,7 +31,7 @@ int main(int argc, char** argv) {
 
     res = curl_easy_perform(curl);
     if (res != CURLE_OK) {
-      fprintf(stderr, "curl_easy_perform() failed: %s\n", curl_easy_strerror(res));
+      fprintf(stderr, "Failed to connect: %s\n", curl_easy_strerror(res));
     }
 
     printf("size=%d, cap=%d\n%s", content->size, content->cap, content->str);
