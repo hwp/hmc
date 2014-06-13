@@ -34,5 +34,11 @@ void dstr_free(d_string* str);
 ssize_t dstr_cat(d_string* dest, const char* src);
 ssize_t dstr_ncat(d_string* dest, const char* src, size_t n);
 
+/**
+ * Get content form an URL.
+ * @return a new dynamic string, which should be freed after use.
+ */
+d_string* url_request(const char* url);
+
 #endif  // UTILS_H_
 

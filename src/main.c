@@ -7,38 +7,10 @@
 #include "utils.h"
 
 #include <stdio.h>
-#include <curl/curl.h>
-
-size_t write_data(void *buffer, size_t size, size_t nmemb, void *dstr) {
-  d_string* str = (d_string*) dstr;
-  dstr_ncat(str, buffer, size * nmemb);
-  return nmemb;
-}
 
 int main(int argc, char** argv) {
-  CURL* curl;
-  CURLcode res;
-
-  curl = curl_easy_init();
-
-  if (curl) {
-    curl_easy_setopt(curl, CURLOPT_URL, argv[1]);
-    curl_easy_setopt(curl, CURLOPT_USERAGENT, "hwp"); 
-
-    d_string* content = dstr_alloc();
-    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_data);
-    curl_easy_setopt(curl, CURLOPT_WRITEDATA, content);
-
-    res = curl_easy_perform(curl);
-    if (res != CURLE_OK) {
-      fprintf(stderr, "Failed to connect: %s\n", curl_easy_strerror(res));
-    }
-
-    printf("size=%d, cap=%d\n%s", content->size, content->cap, content->str);
-
-    dstr_free(content);
-    curl_easy_cleanup(curl);
-  }
+  d_string* response = url_request(argv[1]);
+  printf("%s\n", response->str);
 
   return 0;
 }

@@ -7,9 +7,9 @@
 #include "utils.h"
 
 #include <stdlib.h>
-#include <string.h>
-
 #include <stdio.h>
+#include <string.h>
+#include <curl/curl.h>
 
 #define DSTR_INIT_CAP 1024;
 
@@ -61,5 +61,38 @@ ssize_t dstr_ncat(d_string* dest, const char* src, size_t n) {
   strncat(dest->str, src, n);
   dest->size += n;
   return n;
+}
+
+size_t write_data(void *buffer, size_t size, size_t nmemb, void *dstr) {
+  d_string* str = (d_string*) dstr;
+  dstr_ncat(str, buffer, size * nmemb);
+  return nmemb;
+}
+
+d_string* url_request(const char* url) {
+  CURL* curl;
+  CURLcode res;
+
+  curl = curl_easy_init();
+  if (curl == NULL) {
+    fprintf(stderr, "Failed to initiate CURL.\n");
+    return NULL;
+  }
+
+  curl_easy_setopt(curl, CURLOPT_URL, url);
+  curl_easy_setopt(curl, CURLOPT_USERAGENT, "hwp"); 
+
+  d_string* content = dstr_alloc();
+  curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_data);
+  curl_easy_setopt(curl, CURLOPT_WRITEDATA, content);
+
+  res = curl_easy_perform(curl);
+  if (res != CURLE_OK) {
+    fprintf(stderr, "Failed to connect: %s\n", curl_easy_strerror(res));
+  }
+
+  curl_easy_cleanup(curl);
+
+  return content;
 }
 
