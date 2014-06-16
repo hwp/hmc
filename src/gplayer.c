@@ -10,13 +10,13 @@
 #include <stdio.h>
 #include <string.h>
 
-void gplayer_init() {
+void gplayer_init(void) {
   int argc = 0;
   char** argv = NULL;
   gst_init(&argc, &argv);
 }
 
-gplayer* gplayer_alloc() {
+gplayer* gplayer_alloc(void) {
   gplayer* p = malloc(sizeof(gplayer));
   p->pipeline = NULL;
   p->uri = NULL;
@@ -39,14 +39,14 @@ void gplayer_free(gplayer* gp) {
 }
 
 void gplayer_set_uri(gplayer* gp, const char* uri) {
-  if (gp->uri != NULL) {
+  if (gp->uri) {
     free(gp->uri);
   }
   gp->uri = strdup(uri);
 }
 
 void gplayer_play(gplayer* gp) {
-  if (gp->pipeline == NULL) {
+  if (!gp->pipeline) {
     char* script = malloc(sizeof(char) * (20 + strlen(gp->uri)));
     sprintf(script, "playbin uri=%s", gp->uri);
     GError* error = NULL;
@@ -61,3 +61,6 @@ void gplayer_play(gplayer* gp) {
   gst_element_set_state(gp->pipeline, GST_STATE_PLAYING);
 }
 
+void gplayer_pause(gplayer* gp) {
+  gst_element_set_state (gp->pipeline, GST_STATE_PAUSED);
+}

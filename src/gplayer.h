@@ -17,12 +17,12 @@ typedef struct {
   void* cbdata;
 } gplayer;
 
-void gplayer_init();
+void gplayer_init(void);
 
 /**
  * Get an instance of gplayer.
  */
-gplayer* gplayer_alloc();
+gplayer* gplayer_alloc(void);
 void gplayer_free(gplayer* gp);
 
 void gplayer_set_uri(gplayer* gp, const char* uri);

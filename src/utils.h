@@ -21,7 +21,7 @@ typedef struct {
 /**
  * Get an instantce of dynamic string.
  */
-d_string* dstr_alloc();
+d_string* dstr_alloc(void);
 
 /**
  * Free a dynamic string.
@@ -33,6 +33,12 @@ void dstr_free(d_string* str);
  */
 ssize_t dstr_cat(d_string* dest, const char* src);
 ssize_t dstr_ncat(d_string* dest, const char* src, size_t n);
+ssize_t dstr_app(d_string* dest, char src);
+
+/**
+ * Clear the content.
+ */
+void dstr_clear(d_string* str);
 
 /**
  * Get content form an URL.

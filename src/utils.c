@@ -13,7 +13,7 @@
 
 #define DSTR_INIT_CAP 1024;
 
-d_string* dstr_alloc() {
+d_string* dstr_alloc(void) {
   d_string* s = malloc(sizeof(d_string));
   if (s == NULL) {
     fprintf(stderr, "Failed to allocate memory, (%s:%d)", __FILE__, __LINE__);
@@ -61,6 +61,21 @@ ssize_t dstr_ncat(d_string* dest, const char* src, size_t n) {
   strncat(dest->str, src, n);
   dest->size += n;
   return n;
+}
+
+ssize_t dstr_app(d_string* dest, char src) {
+  if (src == '\0') {
+    return 0;
+  }
+
+  char buf[1];
+  buf[0] = src;
+  return dstr_ncat(dest, buf, 1);
+}
+
+void dstr_clear(d_string* str) {
+  str->size = 0;
+  str->str[0] = '\0';
 }
 
 size_t write_data(void *buffer, size_t size, size_t nmemb, void *dstr) {
