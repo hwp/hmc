@@ -16,5 +16,9 @@ include_directories(${GLIB_INCLUDE_DIRS})
 find_package(GStreamer REQUIRED)
 include_directories(${GSTREAMER_INCLUDE_DIRS})
 
+find_package(Threads)
+
+set(CMAKE_C_FLAGS "-Wall")
+
 add_subdirectory(src)
 

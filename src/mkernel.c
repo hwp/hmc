@@ -21,7 +21,8 @@ void toggle(gplayer* player) {
 }
 
 void start_mc(void (*get_input)(d_string*), gplayer* player) {
-  gplayer_set_uri(player, "http://uk1.internet-radio.com:15476/");
+  //gplayer_set_uri(player, "http://uk1.internet-radio.com:15476/");
+  gplayer_set_uri(player, "file:///home/hwp/workspace/hmc/data/hello.wav");
 
   d_string* cmd = dstr_alloc();
   int cont = 1;
