@@ -26,8 +26,8 @@ gplayer* gplayer_alloc(void);
 void gplayer_free(gplayer* gp);
 
 void gplayer_set_uri(gplayer* gp, const char* uri);
-void gplayer_set_volume(gplayer* gp, int vol);
-int gplayer_get_volume(gplayer* gp);
+void gplayer_set_volume(gplayer* gp, double vol);
+double gplayer_get_volume(gplayer* gp);
 void gplayter_set_cbdata(gplayer* gp, void*);
 void gplayer_play(gplayer* gp);
 void gplayer_pause(gplayer* gp);

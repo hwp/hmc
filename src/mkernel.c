@@ -32,6 +32,7 @@ void start_mc(void (*get_input)(d_string*), gplayer* player) {
       cont = 0;
     }
     else {
+      double v = 0;
       switch (cmd->str[0]) {
         case 's':
           gplayer_play(player);
@@ -44,6 +45,20 @@ void start_mc(void (*get_input)(d_string*), gplayer* player) {
           break;
         case 't':
           toggle(player);
+          break;
+        case ',':
+          v = gplayer_get_volume(player) - 0.001;
+          if (v < 0.0) {
+            v = 0.0;
+          }
+          gplayer_set_volume(player, v);
+          break;
+        case '.':
+          v = gplayer_get_volume(player) + 0.001;
+          if (v > 10.0) {
+            v = 10.0;
+          }
+          gplayer_set_volume(player, v);
           break;
         default:
           fprintf(stderr, "Invalid Command : %s", cmd->str);

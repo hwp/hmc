@@ -73,3 +73,17 @@ void gplayer_stop(gplayer* gp) {
   }
 }
 
+void gplayer_set_volume(gplayer* gp, double vol) {
+  if (gp->pipeline) {
+    g_object_set(gp->pipeline, "volume", vol, NULL);
+  }
+}
+
+double gplayer_get_volume(gplayer* gp) {
+  if (gp->pipeline) {
+    double vol;
+    g_object_get(gp->pipeline, "volume", &vol, NULL);
+    return vol;
+  }
+}
+

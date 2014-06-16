@@ -41,6 +41,8 @@ void tui_get_input(d_string* input) {
       case 'p':
       case 't':
       case 'q':
+      case ',':
+      case '.':
         dstr_app(input, cmd);
         break;
       case 'f':
