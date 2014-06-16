@@ -10,9 +10,9 @@
 #include <gst/gst.h>
 
 typedef struct {
-  GstElement *pipeline;
+  GstElement* pipeline;
+  GstState state;
   char* uri;
-  int status;
   void (*onfinish)(void*);
   void* cbdata;
 } gplayer;

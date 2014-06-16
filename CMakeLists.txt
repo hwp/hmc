@@ -10,7 +10,7 @@ project(HMC)
 find_package(CURL REQUIRED)
 include_directories(${CURL_INCLUDE_DIRS})
 
-find_package(GLIB REQUIRED)
+find_package(GLIB REQUIRED COMPONENTS gobject)
 include_directories(${GLIB_INCLUDE_DIRS})
 
 find_package(GStreamer REQUIRED)

@@ -19,8 +19,8 @@ void gplayer_init(void) {
 gplayer* gplayer_alloc(void) {
   gplayer* p = malloc(sizeof(gplayer));
   p->pipeline = NULL;
+  p->state = GST_STATE_NULL;
   p->uri = NULL;
-  p->status = 0;
   p->onfinish = NULL;
   p->cbdata = NULL;
 
@@ -28,11 +28,11 @@ gplayer* gplayer_alloc(void) {
 }
 
 void gplayer_free(gplayer* gp) {
-  if (gp->pipeline != NULL) { 
+  if (gp->pipeline) { 
     gst_element_set_state (gp->pipeline, GST_STATE_NULL);
     gst_object_unref(gp->pipeline);
   }
-  if (gp->uri != NULL) {
+  if (gp->uri) {
     free(gp->uri);
   }
   free(gp);
@@ -47,20 +47,29 @@ void gplayer_set_uri(gplayer* gp, const char* uri) {
 
 void gplayer_play(gplayer* gp) {
   if (!gp->pipeline) {
-    char* script = malloc(sizeof(char) * (20 + strlen(gp->uri)));
-    sprintf(script, "playbin uri=%s", gp->uri);
-    GError* error = NULL;
-    gp->pipeline = gst_parse_launch(script, &error);
+    gp->pipeline = gst_element_factory_make("playbin", "playbin");
     if (!gp->pipeline) {
-      g_print ("Parse error: %s\n", error->message);
-      exit (1);
+      fprintf(stderr, "Failed to create playbin\n");
+      exit(2);
     }
-    free(script);
+    g_object_set(gp->pipeline, "uri", gp->uri, NULL);
   }
 
   gst_element_set_state(gp->pipeline, GST_STATE_PLAYING);
+  gp->state = GST_STATE_PLAYING;
 }
 
 void gplayer_pause(gplayer* gp) {
-  gst_element_set_state (gp->pipeline, GST_STATE_PAUSED);
+  if (gp->pipeline) {
+    gst_element_set_state (gp->pipeline, GST_STATE_PAUSED);
+    gp->state = GST_STATE_PAUSED;
+  }
 }
+
+void gplayer_stop(gplayer* gp) {
+  if (gp->pipeline) {
+    gst_element_set_state (gp->pipeline, GST_STATE_NULL);
+    gp->state = GST_STATE_NULL;
+  }
+}
+
