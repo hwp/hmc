@@ -9,6 +9,8 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <assert.h>
+
 #include <curl/curl.h>
 
 #define DSTR_INIT_CAP 1024;
@@ -82,6 +84,54 @@ size_t write_data(void *buffer, size_t size, size_t nmemb, void *dstr) {
   d_string* str = (d_string*) dstr;
   dstr_ncat(str, buffer, size * nmemb);
   return nmemb;
+}
+
+queue* queue_alloc(void) {
+  queue* q = malloc(sizeof(queue));
+  q->first = NULL;
+  q->last = NULL;
+  return q;
+}
+
+void queue_free(queue* q) {
+  element* e = q->first;
+  element* n;
+  while (e) {
+    n = e->next;
+    free(e);
+    e = n;
+  }
+}
+
+void queue_push(queue* q, void* data) {
+  assert(data);
+  element* e = malloc(sizeof(element));
+  e->value = data;
+  e->next = NULL;
+
+  if (q->last) {
+    q->last->next = e;
+    q->last = e;
+  }
+  else {
+    q->first = e;
+    q->last = e;
+  }
+}
+
+void* queue_pop(queue* q) {
+  void* d = NULL;
+  element* e = q->first;
+  if (e) {
+    d = e->value;
+    q->first = e->next;
+    free(e);
+    if (!q->first) {
+      q->last = NULL;
+    }
+  }
+
+  return d;
 }
 
 d_string* url_request(const char* url) {
