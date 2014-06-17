@@ -13,6 +13,11 @@
 
 #define PL_FILE "playlist"
 
+typedef struct {
+  gplayer* player;
+  queue* plist;
+} user_data;
+
 void toggle(gplayer* player) {
   if (player->state == GST_STATE_PLAYING) {
     gplayer_pause(player);
@@ -22,12 +27,32 @@ void toggle(gplayer* player) {
   }
 }
 
+void next_song(user_data* data) {
+  gplayer_stop(data->player);
+  d_string* next = (d_string*)queue_pop(data->plist);
+  if (next) {
+    gplayer_set_uri(data->player, next->str);
+    gplayer_play(data->player);
+  }
+  else {
+    fprintf(stderr, "End of playlist\n");
+  }
+}
+
 void start_mc(void (*get_input)(d_string*), gplayer* player) {
   queue* plist = load_file(PL_FILE);
   if (!plist) {
     fprintf(stderr, "ERROR: Failed to load playlist\n");
     exit(2);
   }
+
+  user_data ud;
+  ud.player = player;
+  ud.plist = plist;
+  player->onfinish = (CALLBACK_FUNC)next_song;
+  player->cbdata = &ud;
+
+  
   gplayer_set_uri(player, ((d_string*)queue_pop(plist))->str);
 
   d_string* cmd = dstr_alloc();

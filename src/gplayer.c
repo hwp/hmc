@@ -79,6 +79,9 @@ static gboolean message_callback(GstBus *bus,
       break;
     case GST_MESSAGE_EOS:
       fprintf(stderr, "End-Of-Stream reached.\n");
+      if (gp->onfinish) {
+        gp->onfinish(gp->cbdata);
+      }
       break;
     case GST_MESSAGE_STATE_CHANGED:
       gst_message_parse_state_changed(msg, 

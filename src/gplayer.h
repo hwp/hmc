@@ -9,11 +9,13 @@
 
 #include <gst/gst.h>
 
+typedef void (*CALLBACK_FUNC)(void*);
+
 typedef struct {
   GstElement* pipeline;
   GstState state;
   char* uri;
-  void (*onfinish)(void*);
+  CALLBACK_FUNC onfinish;
   void* cbdata;
 } gplayer;
 
