@@ -86,10 +86,13 @@ static gboolean message_callback(GstBus *bus,
     case GST_MESSAGE_STATE_CHANGED:
       gst_message_parse_state_changed(msg, 
           &old_state, &new_state, &pending_state);
+      gp->state = new_state;
+      /*
       if (GST_MESSAGE_SRC(msg) == GST_OBJECT(gp->pipeline)) {
         fprintf(stderr, "State changed from %d to %d with %d pending\n",
             old_state, new_state, pending_state);
       }
+      */
       break;
     default:
       /* Ignore */
@@ -123,7 +126,6 @@ void gplayer_play(gplayer* gp) {
     gst_object_unref(gp->pipeline);
     exit(2);
   }
-  gp->state = GST_STATE_PLAYING;
 }
 
 void gplayer_pause(gplayer* gp) {
@@ -135,7 +137,6 @@ void gplayer_pause(gplayer* gp) {
       gst_object_unref(gp->pipeline);
       exit(2);
     }
-    gp->state = GST_STATE_PAUSED;
   }
 }
 
@@ -148,9 +149,9 @@ void gplayer_stop(gplayer* gp) {
       gst_object_unref(gp->pipeline);
       exit(2);
     }
-    gp->state = GST_STATE_NULL;
     gst_object_unref(gp->pipeline);
     gp->pipeline = NULL;
+    gp->state = GST_STATE_NULL;
   }
 }
 
