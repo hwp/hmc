@@ -21,8 +21,8 @@ typedef struct {
 /**
  * Queue Element
  */
-typedef struct {
-  element* next;
+typedef struct _element{
+  struct _element* next;
   void* value;
 } element;
 
@@ -71,6 +71,11 @@ void* queue_pop(queue* q);
  * @return a new dynamic string, which should be freed after use.
  */
 d_string* url_request(const char* url);
+
+/**
+ * Load a file as queue of lines.
+ */
+queue* load_file(const char* file);
 
 #endif  // UTILS_H_
 

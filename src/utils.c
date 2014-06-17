@@ -10,10 +10,12 @@
 #include <stdio.h>
 #include <string.h>
 #include <assert.h>
+#include <errno.h>
 
 #include <curl/curl.h>
 
 #define DSTR_INIT_CAP 1024;
+#define BUFFER_SIZE 200
 
 d_string* dstr_alloc(void) {
   d_string* s = malloc(sizeof(d_string));
@@ -159,5 +161,41 @@ d_string* url_request(const char* url) {
   curl_easy_cleanup(curl);
 
   return content;
+}
+
+queue* load_file(const char* file) {
+  FILE* in = fopen(file, "r");
+  if (!in) {
+    fprintf(stderr, "Failed to open file %s: %s\n",
+        file, strerror(errno));
+    return NULL;
+  }
+
+  queue* q = queue_alloc();
+  char buffer[BUFFER_SIZE];
+
+  d_string* line = dstr_alloc();
+  while (fgets(buffer, BUFFER_SIZE, in)) {
+    int last = strlen(buffer) - 1;
+    if (buffer[last] == '\n') {
+      buffer[last] = '\0';
+      dstr_cat(line, buffer);
+      queue_push(q, line);
+      line = dstr_alloc();
+    }
+    else {
+      dstr_cat(line, buffer);
+    }
+  }
+
+  if (line->size > 0) {
+    queue_push(q, line);
+  }
+  else {
+    dstr_free(line);
+  }
+
+  fclose(in);
+  return q;
 }
 

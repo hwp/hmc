@@ -11,6 +11,8 @@
 
 #include <gst/gst.h>
 
+#define PL_FILE "playlist"
+
 void toggle(gplayer* player) {
   if (player->state == GST_STATE_PLAYING) {
     gplayer_pause(player);
@@ -21,8 +23,12 @@ void toggle(gplayer* player) {
 }
 
 void start_mc(void (*get_input)(d_string*), gplayer* player) {
-  //gplayer_set_uri(player, "http://uk1.internet-radio.com:15476/");
-  gplayer_set_uri(player, "file:///home/hwp/workspace/hmc/data/hello.wav");
+  queue* plist = load_file(PL_FILE);
+  if (!plist) {
+    fprintf(stderr, "ERROR: Failed to load playlist\n");
+    exit(2);
+  }
+  gplayer_set_uri(player, ((d_string*)queue_pop(plist))->str);
 
   d_string* cmd = dstr_alloc();
   int cont = 1;
