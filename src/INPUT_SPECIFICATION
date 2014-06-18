@@ -1,0 +1,13 @@
+s       play
+p       pause
+t       toggle play/pause
+q       quit
+n       next track
+,       volume down
+.       volume up
+a:      add to playlist
+ac#       - cd track number #
+aca       - all cd tracks
+ad        - douban.fm
+c       clear playlist
+
