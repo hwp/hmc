@@ -12,6 +12,8 @@ int main(int argc, char** argv) {
   gplayer_init();
   gplayer* p = gplayer_alloc();
 
+  tui_init();
+
   start_mc(tui_get_input, p);
 
   gplayer_free(p);

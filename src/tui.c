@@ -13,12 +13,27 @@
 #include <unistd.h>
 #include <termios.h>
 
+struct termios pterm;
+
+// Restore previous attributes
+void restore_attr() {
+	tcsetattr(STDIN_FILENO, TCSANOW, &pterm);
+}
+
+void tui_init() {
+	struct termios term;
+	tcgetattr(STDIN_FILENO, &term);
+
+  pterm = term;
+  atexit(restore_attr);
+}
+
 // Warning: Concurrent use not permitted
 void tui_get_input(d_string* input) {
   // Set term attributes
 	struct termios term;
 	tcgetattr(STDIN_FILENO, &term);
-	struct termios pterm = term;
+
 	term.c_lflag &= ~(ICANON | ECHO);
 	tcsetattr(STDIN_FILENO, TCSANOW, &term);
 	
@@ -41,6 +56,7 @@ void tui_get_input(d_string* input) {
       case 'p':
       case 't':
       case 'q':
+      case 'n':
       case ',':
       case '.':
         dstr_app(input, cmd);
@@ -68,7 +84,6 @@ void tui_get_input(d_string* input) {
     }
   } while (cont);
 
-  // Restore previous attributes
 	tcsetattr(STDIN_FILENO, TCSANOW, &pterm);
 }
 

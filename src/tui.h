@@ -10,6 +10,11 @@
 #include "utils.h"
 
 /**
+ * This function should be called before using tui.
+ */
+void tui_init();
+
+/**
  * Result will be appended to input.
  */
 void tui_get_input(d_string* input);

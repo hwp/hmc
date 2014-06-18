@@ -78,6 +78,9 @@ void start_mc(void (*get_input)(d_string*), gplayer* player) {
         case 't':
           toggle(player);
           break;
+        case 'n':
+          next_song(&ud);
+          break;
         case ',':
           v = gplayer_get_volume(player) - 0.001;
           if (v < 0.0) {
