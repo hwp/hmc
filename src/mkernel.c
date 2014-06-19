@@ -16,26 +16,41 @@
 typedef struct {
   gplayer* player;
   queue* plist;
-} user_data;
+} kernel_data;
 
-void toggle(gplayer* player) {
-  if (player->state == GST_STATE_PLAYING) {
-    gplayer_pause(player);
-  }
-  else {
-    gplayer_play(player);
-  }
-}
-
-void next_song(user_data* data) {
+void next_track(kernel_data* data) {
   gplayer_stop(data->player);
   d_string* next = (d_string*)queue_pop(data->plist);
   if (next) {
-    gplayer_set_uri(data->player, next->str);
-    gplayer_play(data->player);
+    gplayer_start(data->player, next->str);
   }
   else {
     fprintf(stderr, "End of playlist\n");
+  }
+}
+
+void onfinish(kernel_data* data, finish_t type) {
+  if (type == FINISH_EOS) {
+    next_track(data);
+  }
+  else {
+    fprintf(stderr, "An error occured. Continue next track\n");
+    next_track(data);
+  }
+}
+
+void toggle(kernel_data* data) {
+  switch (data->player->state) {
+    case GST_STATE_PLAYING:
+      gplayer_pause(data->player);
+      break;
+    case GST_STATE_READY:
+    case GST_STATE_PAUSED:
+      gplayer_unpause(data->player);
+      break;
+    default:
+      next_track(data);
+      break;
   }
 }
 
@@ -46,14 +61,11 @@ void start_mc(void (*get_input)(d_string*), gplayer* player) {
     exit(2);
   }
 
-  user_data ud;
-  ud.player = player;
-  ud.plist = plist;
-  player->onfinish = (CALLBACK_FUNC)next_song;
-  player->cbdata = &ud;
-
-  
-  gplayer_set_uri(player, ((d_string*)queue_pop(plist))->str);
+  kernel_data kd;
+  kd.player = player;
+  kd.plist = plist;
+  player->onfinish = (CALLBACK_FUNC)onfinish;
+  player->cbdata = &kd;
 
   d_string* cmd = dstr_alloc();
   int cont = 1;
@@ -66,20 +78,14 @@ void start_mc(void (*get_input)(d_string*), gplayer* player) {
     else {
       double v = 0;
       switch (cmd->str[0]) {
-        case 's':
-          gplayer_play(player);
-          break;
-        case 'p':
-          gplayer_pause(player);
-          break;
         case 'q':
           cont = 0;
           break;
         case 't':
-          toggle(player);
+          toggle(&kd);
           break;
         case 'n':
-          next_song(&ud);
+          next_track(&kd);
           break;
         case ',':
           v = gplayer_get_volume(player) - 0.001;

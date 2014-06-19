@@ -35,7 +35,6 @@ gplayer* gplayer_alloc(void) {
   gplayer* p = malloc(sizeof(gplayer));
   p->pipeline = NULL;
   p->state = GST_STATE_NULL;
-  p->uri = NULL;
   p->onfinish = NULL;
   p->cbdata = NULL;
 
@@ -47,17 +46,7 @@ void gplayer_free(gplayer* gp) {
     gst_element_set_state(gp->pipeline, GST_STATE_NULL);
     gst_object_unref(gp->pipeline);
   }
-  if (gp->uri) {
-    free(gp->uri);
-  }
   free(gp);
-}
-
-void gplayer_set_uri(gplayer* gp, const char* uri) {
-  if (gp->uri) {
-    free(gp->uri);
-  }
-  gp->uri = strdup(uri);
 }
 
 static gboolean message_callback(GstBus *bus,
@@ -70,17 +59,19 @@ static gboolean message_callback(GstBus *bus,
     case GST_MESSAGE_ERROR:
       gst_message_parse_error(msg, &err, &debug_info);
       fprintf(stderr, "Error received from element %s: %s\n",
-          GST_OBJECT_NAME(msg->src), err->message);
+          GST_OBJECT_NAME(GST_MESSAGE_SRC(msg)), err->message);
       fprintf(stderr, "Debugging information: %s\n",
           debug_info ? debug_info : "none");
       g_clear_error (&err);
       g_free (debug_info);
-      exit(2);
+      if (gp->onfinish) {
+        gp->onfinish(gp->cbdata, FINISH_ERROR);
+      }
       break;
     case GST_MESSAGE_EOS:
       fprintf(stderr, "End-Of-Stream reached.\n");
       if (gp->onfinish) {
-        gp->onfinish(gp->cbdata);
+        gp->onfinish(gp->cbdata, FINISH_EOS);
       }
       break;
     case GST_MESSAGE_STATE_CHANGED:
@@ -103,20 +94,23 @@ static gboolean message_callback(GstBus *bus,
   return TRUE;
 }
 
-void gplayer_play(gplayer* gp) {
-  if (!gp->pipeline) {
-    assert(gp->state == GST_STATE_NULL);
-    gp->pipeline = gst_element_factory_make("playbin", "playbin");
-    if (!gp->pipeline) {
-      fprintf(stderr, "Failed to create playbin\n");
-      exit(2);
-    }
-    g_object_set(gp->pipeline, "uri", gp->uri, NULL);
-
-    GstBus* bus = gst_element_get_bus(gp->pipeline);
-    int id = gst_bus_add_watch(bus, (GstBusFunc)message_callback, gp);
-    fprintf(stderr, "Bus watch registered with id %d\n", id);
+void gplayer_start(gplayer* gp, const char* uri) {
+  if (gp->pipeline) {
+    gplayer_stop(gp);
   }
+
+  assert(gp->state == GST_STATE_NULL && !gp->pipeline);
+  fprintf(stderr, "Playing from uri: %s\n", uri);
+
+  gp->pipeline = gst_element_factory_make("playbin", "playbin");
+  if (!gp->pipeline) {
+    fprintf(stderr, "Failed to create playbin\n");
+    exit(2);
+  }
+  g_object_set(gp->pipeline, "uri", uri, NULL);
+
+  GstBus* bus = gst_element_get_bus(gp->pipeline);
+  gst_bus_add_watch(bus, (GstBusFunc)message_callback, gp);
 
   GstStateChangeReturn r =
     gst_element_set_state(gp->pipeline, GST_STATE_PLAYING);
@@ -129,13 +123,23 @@ void gplayer_play(gplayer* gp) {
 }
 
 void gplayer_pause(gplayer* gp) {
-  if (gp->pipeline) {
+  if (gp->pipeline && gp->state != GST_STATE_PAUSED) {
     GstStateChangeReturn r =
       gst_element_set_state (gp->pipeline, GST_STATE_PAUSED);
     if (r == GST_STATE_CHANGE_FAILURE) {
       fprintf(stderr, "Failed to change state (%s:%d)\n", __FILE__, __LINE__);
-      gst_object_unref(gp->pipeline);
-      exit(2);
+      /* do nothing */
+    }
+  }
+}
+
+void gplayer_unpause(gplayer* gp) {
+  if (gp->pipeline && gp->state != GST_STATE_PLAYING) {
+    GstStateChangeReturn r =
+      gst_element_set_state (gp->pipeline, GST_STATE_PLAYING);
+    if (r == GST_STATE_CHANGE_FAILURE) {
+      fprintf(stderr, "Failed to change state (%s:%d)\n", __FILE__, __LINE__);
+      /* do nothing */
     }
   }
 }
@@ -146,8 +150,7 @@ void gplayer_stop(gplayer* gp) {
       gst_element_set_state (gp->pipeline, GST_STATE_NULL);
     if (r == GST_STATE_CHANGE_FAILURE) {
       fprintf(stderr, "ERROR: Failed to change state (%s:%d)\n", __FILE__, __LINE__);
-      gst_object_unref(gp->pipeline);
-      exit(2);
+      /* do nothing */
     }
     gst_object_unref(gp->pipeline);
     gp->pipeline = NULL;
