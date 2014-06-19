@@ -74,6 +74,7 @@ d_string* url_request(const char* url);
 
 /**
  * Load a file as queue of lines.
+ * Each line is stored in d_string
  */
 queue* load_file(const char* file);
 

@@ -116,9 +116,7 @@ void gplayer_start(gplayer* gp, const char* uri) {
     gst_element_set_state(gp->pipeline, GST_STATE_PLAYING);
   if (r == GST_STATE_CHANGE_FAILURE) {
     fprintf(stderr, "Failed to change state (%s:%d)\n", __FILE__, __LINE__);
-
-    gst_object_unref(gp->pipeline);
-    exit(2);
+    /* Do nothing */
   }
 }
 

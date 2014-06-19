@@ -10,6 +10,7 @@
 
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 #include <unistd.h>
 #include <termios.h>
 
@@ -39,6 +40,8 @@ void tui_get_input(d_string* input) {
 	
   char line[INPUT_BUF_SIZE + 1];
   int cont = 0;
+  int cont2 = 0;
+  char* end;
   
   do {
     cont = 0;
@@ -52,8 +55,6 @@ void tui_get_input(d_string* input) {
     switch (cmd) {
       case ' ':
         cmd = 't';
-      case 's':
-      case 'p':
       case 't':
       case 'q':
       case 'n':
@@ -70,20 +71,43 @@ void tui_get_input(d_string* input) {
         dstr_app(input, ' ');
         dstr_cat(input, line);
         break;
-      case 'c':
-        printf("Search channel: ");
-        term.c_lflag |= ECHO;
-        tcsetattr(STDIN_FILENO, TCSANOW, &term);
-        fgets(line, INPUT_BUF_SIZE, stdin);
-        dstr_app(input, cmd);
-        dstr_app(input, ' ');
-        dstr_cat(input, line);
+      case 'a':
+        cmd = getchar();
+        switch (cmd) {
+          case 'c':
+            cont2 = 1;
+            while (cont2) {
+              printf("Add CD track (#|all): ");
+              term.c_lflag |= ECHO;
+              tcsetattr(STDIN_FILENO, TCSANOW, &term);
+              fgets(line, INPUT_BUF_SIZE, stdin);
+              if (!strcmp(line, "all\n")) {
+                dstr_cat(input, "aca");
+                cont2 = 0;
+              }
+              else {
+                strtol(line, &end, 10);
+                if (*end == '\n') {
+                  *end = '\0';
+                  dstr_cat(input, "ac");
+                  dstr_cat(input, line);
+                  cont2 = 0;
+                }
+              }
+            }
+            break;
+          case 'd':
+            dstr_cat(input, "ad");
+            break;
+          default:
+            cont = 1;
+        }
         break;
       default:
         cont = 1;
     }
   } while (cont);
 
-	tcsetattr(STDIN_FILENO, TCSANOW, &pterm);
+  tcsetattr(STDIN_FILENO, TCSANOW, &pterm);
 }
 

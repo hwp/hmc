@@ -8,8 +8,12 @@
 #include "gplayer.h"
 
 #include <stdio.h>
+#include <assert.h>
 
 #include <gst/gst.h>
+
+#include <sys/types.h>
+#include <cdio/cdio.h>
 
 #define PL_FILE "playlist"
 
@@ -54,6 +58,27 @@ void toggle(kernel_data* data) {
   }
 }
 
+void add_cd_track(queue* plist, int number) {
+  assert(number < 10000);
+  char buf[5]; // Assume number < 10000
+
+  sprintf(buf, "%d", number);
+  d_string* uri = dstr_alloc();
+  dstr_cat(uri, "cdda://");
+  dstr_cat(uri, buf);
+  queue_push(plist, uri);
+}
+
+void add_cd_all(queue* plist) {
+  CdIo_t* p_cdio = cdio_open("/dev/cdrom", DRIVER_DEVICE);
+  track_t track_f = cdio_get_first_track_num(p_cdio);
+  track_t track_n = cdio_get_num_tracks(p_cdio);
+  int i;
+  for (i = 0; i < track_n; i++) {
+    add_cd_track(plist, track_f + i);
+  }
+}
+
 void start_mc(void (*get_input)(d_string*), gplayer* player) {
   queue* plist = load_file(PL_FILE);
   if (!plist) {
@@ -68,6 +93,8 @@ void start_mc(void (*get_input)(d_string*), gplayer* player) {
   player->cbdata = &kd;
 
   d_string* cmd = dstr_alloc();
+  char* end;
+  long int nt;
   int cont = 1;
   while (cont) {
     dstr_clear(cmd);
@@ -101,8 +128,32 @@ void start_mc(void (*get_input)(d_string*), gplayer* player) {
           }
           gplayer_set_volume(player, v);
           break;
+        case 'a':
+          switch (cmd->str[1]) {
+            case 'c':
+              if (cmd->str[2] == 'a') {
+                add_cd_all(plist);
+              }
+              else {
+                nt = strtol(cmd->str+2, &end, 10);
+                if (*end == '\0') {
+                  add_cd_track(plist, (int)nt);
+                }
+                else {
+                  fprintf(stderr, "Invalid Command : %s\n", cmd->str);
+                }
+              }
+              break;
+            case 'd':
+              fprintf(stderr, "Invalid Command : %s\n", cmd->str);
+              // TODO douban.fm
+              break;
+            default:
+              fprintf(stderr, "Invalid Command : %s\n", cmd->str);
+          }
+          break;
         default:
-          fprintf(stderr, "Invalid Command : %s", cmd->str);
+          fprintf(stderr, "Invalid Command : %s\n", cmd->str);
       }
     }
   }
