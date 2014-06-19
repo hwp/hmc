@@ -180,7 +180,9 @@ queue* load_file(const char* file) {
     if (buffer[last] == '\n') {
       buffer[last] = '\0';
       dstr_cat(line, buffer);
-      queue_push(q, line);
+      if (line->size > 0) {
+        queue_push(q, line);
+      }
       line = dstr_alloc();
     }
     else {
