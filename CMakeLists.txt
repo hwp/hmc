@@ -22,3 +22,5 @@ set(CMAKE_C_FLAGS "-Wall")
 
 add_subdirectory(src)
 
+add_subdirectory(doc)
+
